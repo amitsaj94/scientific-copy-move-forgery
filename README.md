@@ -41,18 +41,18 @@ ImageForgeryDetection/
 
 ## 📸 Demo
 
-Include screenshots of your Streamlit app here:
+Screenshot from Streamlit app:
 
 ![App Screenshot](app/examples/demo.png)
 
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
-- Python >= 3.9
+- Python = 3.10.9
 - CUDA (optional for GPU inference)
 - pip
 
@@ -60,6 +60,27 @@ Include screenshots of your Streamlit app here:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ImageForgeryDetection.git
+git clone https://github.com/amitsaj94/ImageForgeryDetection.git
 cd ImageForgeryDetection
+
+
+### Create a virtual environment and activate it:
+
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+
+### Install dependencies:
+
+pip install -r app/requirements.txt
+
+### Run the Streamlit app:
+
+streamlit run app/app.py
+
+
+
+
 
