@@ -15,3 +15,23 @@ A deep learning-based web app to detect copy-move image forgeries. Built with **
 
 ## 🗂 Repository Structure
 
+ImageForgeryDetection/
+├─ app/
+│ ├─ app.py # Streamlit app
+│ ├─ model.py # Model architecture
+│ ├─ infer.py # Inference helper
+│ ├─ examples/ # Example images
+│ └─ checkpoints/ # Model checkpoints (ignored in git)
+|__ Few Data example/
+  |-- train_images 
+    |-- authentic  # authentic images(.png)
+    |-- forged  # forged images(.png)
+  |-- train_masks # (masks in .npy)
+├─ src/ # Additional scripts
+├─ experiments/ # Jupyter notebooks for EDA/training
+├─ requirements.txt # Python dependencies
+├─ README.md # Project documentation
+└─ .gitignore # Ignored files/folders
+
+
+
