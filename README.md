@@ -43,7 +43,7 @@ ImageForgeryDetection/
 
 Include screenshots of your Streamlit app here:
 
-![App Screenshot](app/examples/5807.png)
+![App Screenshot](app/examples/demo.png)
 
 
 ---
