@@ -35,3 +35,31 @@ ImageForgeryDetection/
 
 
 
+> ⚠️ **Note:** Large files like model checkpoints and dataset are excluded from GitHub for size constraints.
+
+---
+
+## 📸 Demo
+
+Include screenshots of your Streamlit app here:
+
+![App Screenshot](app/examples/5807.png)
+
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python >= 3.9
+- CUDA (optional for GPU inference)
+- pip
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/ImageForgeryDetection.git
+cd ImageForgeryDetection
+
