@@ -23,7 +23,7 @@ Example predictions:
 
 | Original Image | Predicted Mask | Grad-CAM |
 |----------------|----------------|----------|
-| ![orig](app/examples/orig.png) | ![mask](app/examples/mask.png) | ![grad](app/examples/gradcam.png) |
+| ![orig](app/examples/github_pres/orig.png) | ![mask](app/examples/github_pres/mask.png) | ![grad](app/examples/github_pres/gradcam.png) |
 
 ---
 
