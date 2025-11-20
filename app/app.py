@@ -17,8 +17,6 @@ from huggingface_hub import hf_hub_download
 IMG_SIZE = 384
 
 # ----------------------- CHANGE: Download checkpoint from HF -----------------------
-import os
-
 CKPT_PATH = hf_hub_download(
     repo_id="Amitsaj/image-forgery-checkpoints",
     filename="best_hybrid_stepB_v2.pth",
@@ -141,7 +139,7 @@ if load_btn or "model_obj" not in st.session_state:
         # ----------------------- CHANGE: Pass CKPT_PATH downloaded from HF -----------------------
         st.session_state["model_obj"] = get_model(CKPT_PATH)
         # ---------------------------------------------------------------------------
-        st.success("Model loaded.")
+        st.success("Model loaded from Hugging Face ✅")
     except Exception as e:
         st.error(f"Failed to load model: {e}")
         st.stop()

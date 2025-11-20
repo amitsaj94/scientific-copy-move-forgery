@@ -1,6 +1,7 @@
 import torch
 import segmentation_models_pytorch as smp
-
+from huggingface_hub import hf_hub_download
+import os
 
 class HybridForgeryModel(torch.nn.Module):
     """
@@ -46,20 +47,42 @@ class HybridForgeryModel(torch.nn.Module):
         return seg, cls_logit
 
 
-def load_checkpoint(model, path, device):
+def load_checkpoint(model, path, device, from_hf=False, hf_repo=None, hf_filename=None):
     """
     Load the saved training checkpoint.
-    Uses torch.load safely and supports your training .pth file.
+    Supports:
+      - Local .pth files
+      - Hugging Face Hub hosted checkpoints
     """
+    if from_hf:
+        if hf_repo is None or hf_filename is None:
+            raise ValueError("hf_repo and hf_filename must be provided for HF download")
+        print(f"Downloading checkpoint from HF: {hf_repo}/{hf_filename}")
+        path = hf_hub_download(repo_id=hf_repo, filename=hf_filename)
+        print(f"Downloaded to: {path}")
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Checkpoint not found at {path}")
+
     print(f"Loading checkpoint: {path}")
 
-    # FIXED — removed invalid map_snapshot argument
-    ckpt = torch.load(path, map_location=device)
+    # PyTorch 2.6+ safe load
+    try:
+        with torch.serialization.safe_globals(["numpy._core.multiarray.scalar"]):
+            ckpt = torch.load(path, map_location=device, weights_only=True)
+    except Exception as e:
+        print("Safe load failed, trying default torch.load...")
+        ckpt = torch.load(path, map_location=device)
 
-    if "model_state" not in ckpt:
-        raise KeyError("Checkpoint missing key 'model_state'")
+    # Determine correct key
+    if "model_state" in ckpt:
+        key = "model_state"
+    elif "model_state_dict" in ckpt:
+        key = "model_state_dict"
+    else:
+        raise KeyError("Checkpoint missing 'model_state' or 'model_state_dict' key")
 
-    model.load_state_dict(ckpt["model_state"])
-
+    model.load_state_dict(ckpt[key])
     print(f"Loaded model — epoch: {ckpt.get('epoch', '?')}")
     return model
+
