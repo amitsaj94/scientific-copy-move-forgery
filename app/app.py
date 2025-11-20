@@ -1,4 +1,4 @@
-# app.py - Streamlit Demo for Scientific Copy-Move Forgery Detection (Option B)
+# app.py - Streamlit Demo for Scientific Copy-Move Forgery Detection 
 import streamlit as st
 from PIL import Image
 import numpy as np
@@ -8,22 +8,10 @@ import os
 import torch
 from model import HybridForgeryModel, load_checkpoint
 
-# ----------------------- CHANGE: Import HF download -----------------------
-from huggingface_hub import hf_hub_download
-
 # -----------------------
 # CONFIG
 # -----------------------
 IMG_SIZE = 384
-
-# ----------------------- CHANGE: Download checkpoint from HF -----------------------
-CKPT_PATH = hf_hub_download(
-    repo_id="Amitsaj/image-forgery-checkpoints",
-    filename="best_hybrid_stepB_v2.pth",
-    token=os.environ.get("HF_TOKEN")  # <-- uses secret token
-)
-# ---------------------------------------------------------------------------
-
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 st.set_page_config(layout="wide", page_title="Forgery Inspector — Scientific Demo")
 
@@ -57,9 +45,17 @@ def overlay_image(img_rgb, heatmap, alpha=0.5):
 # LOAD MODEL (cached)
 # -----------------------
 @st.cache_resource(show_spinner=False)
-def get_model(ckpt_path):
+def get_model():
     model = HybridForgeryModel().to(DEVICE)
-    model = load_checkpoint(model, ckpt_path, DEVICE)
+    # Load checkpoint from HF
+    model = load_checkpoint(
+        model=model,
+        path=None,
+        device=DEVICE,
+        from_hf=True,
+        hf_repo="Amitsaj/image-forgery-checkpoints",
+        hf_filename="best_hybrid_stepB_v2.pth"
+    )
     model.eval()
     return model
 
@@ -120,11 +116,7 @@ st.markdown("Interactive demo for segmentation + classification. Option B: Resea
 
 with st.sidebar:
     st.header("Model & Input")
-
-    # ----------------------- CHANGE: Removed user input for checkpoint -----------------------
     load_btn = st.button("Load model")
-    # ---------------------------------------------------------------------------
-
     examples = st.selectbox(
         "Example images (optional)",
         ["-- none --"] + [f for f in os.listdir("examples") if f.lower().endswith((".png",".jpg",".jpeg"))]
@@ -132,21 +124,24 @@ with st.sidebar:
     )
     threshold = st.slider("Segmentation threshold", 0.0, 1.0, 0.5, 0.01)
     show_gradcam = st.checkbox("Show Grad-CAM (classifier)", value=True)
-    st.markdown("**Notes:** Use the model trained at IMG_SIZE=384. Adjust threshold to tune mask sensitivity.")
+    st.markdown("**Notes:** Model trained at IMG_SIZE=384. Threshold adjusts mask sensitivity.")
 
-if load_btn or "model_obj" not in st.session_state:
-    try:
-        # ----------------------- CHANGE: Pass CKPT_PATH downloaded from HF -----------------------
-        st.session_state["model_obj"] = get_model(CKPT_PATH)
-        # ---------------------------------------------------------------------------
-        st.success("Model loaded from Hugging Face ✅")
-    except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        st.stop()
+# ----------------------- Load model -----------------------
+if "model_obj" not in st.session_state:
+    if load_btn:
+        try:
+            st.session_state["model_obj"] = get_model()
+            st.success("Model loaded from Hugging Face ✅")
+        except Exception as e:
+            st.error(f"Failed to load model: {e}")
+            st.stop()
 
-model = st.session_state["model_obj"]
+model = st.session_state.get("model_obj", None)
+if model is None:
+    st.warning("Please load the model to proceed.")
+    st.stop()
 
-# ----------------------- The rest of your code remains unchanged -----------------------
+# ----------------------- Main app -----------------------
 col1, col2 = st.columns([1,1])
 
 with col1:
@@ -155,6 +150,7 @@ with col1:
     if examples and examples != "-- none --":
         if st.button("Use example"):
             uploaded = open(os.path.join("examples", examples), "rb")
+
     if uploaded:
         pil_img = Image.open(uploaded).convert("RGB")
         st.image(pil_img, caption="Uploaded image", use_container_width=True)

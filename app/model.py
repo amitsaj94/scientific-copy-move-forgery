@@ -66,13 +66,8 @@ def load_checkpoint(model, path, device, from_hf=False, hf_repo=None, hf_filenam
 
     print(f"Loading checkpoint: {path}")
 
-    # PyTorch 2.6+ safe load
-    try:
-        with torch.serialization.safe_globals(["numpy._core.multiarray.scalar"]):
-            ckpt = torch.load(path, map_location=device, weights_only=True)
-    except Exception as e:
-        print("Safe load failed, trying default torch.load...")
-        ckpt = torch.load(path, map_location=device)
+    # PyTorch 2.6+ safe load: weights_only=False to allow numpy globals
+    ckpt = torch.load(path, map_location=device, weights_only=False)
 
     # Determine correct key
     if "model_state" in ckpt:
@@ -85,4 +80,3 @@ def load_checkpoint(model, path, device, from_hf=False, hf_repo=None, hf_filenam
     model.load_state_dict(ckpt[key])
     print(f"Loaded model — epoch: {ckpt.get('epoch', '?')}")
     return model
-
