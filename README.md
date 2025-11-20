@@ -34,6 +34,7 @@ You can try out the Scientific Copy-Move Forgery Detection app online here:
 [Open Streamlit App](https://scientific-copy-move-forgery-hfc73gwmnh2pyr7jmhzu8w.streamlit.app/)
 
 **Features:**
+- load the model by clicking on load model tab if model is not loaded
 - Upload an image or select from example images(click on use example tab once example image is selected).
 - Hybrid Segmentation + Classification using UNet (EfficientNet-B3).
 - Interactive segmentation threshold adjustment.
