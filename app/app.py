@@ -8,11 +8,21 @@ import os
 import torch
 from model import HybridForgeryModel, load_checkpoint
 
+# ----------------------- CHANGE: Import HF download -----------------------
+from huggingface_hub import hf_hub_download
+
 # -----------------------
 # CONFIG
 # -----------------------
 IMG_SIZE = 384
-CKPT_PATH = "checkpoints/best_hybrid_stepB_v2.pth"
+
+# ----------------------- CHANGE: Download checkpoint from HF -----------------------
+CKPT_PATH = hf_hub_download(
+    repo_id="Amitsaj/image-forgery-checkpoints",  # HF repo
+    filename="best_hybrid_stepB_v2.pth"           # filename in HF repo
+)
+# ---------------------------------------------------------------------------
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 st.set_page_config(layout="wide", page_title="Forgery Inspector — Scientific Demo")
 
@@ -109,8 +119,11 @@ st.markdown("Interactive demo for segmentation + classification. Option B: Resea
 
 with st.sidebar:
     st.header("Model & Input")
-    ckpt = st.text_input("Checkpoint path", CKPT_PATH)
+
+    # ----------------------- CHANGE: Removed user input for checkpoint -----------------------
     load_btn = st.button("Load model")
+    # ---------------------------------------------------------------------------
+
     examples = st.selectbox(
         "Example images (optional)",
         ["-- none --"] + [f for f in os.listdir("examples") if f.lower().endswith((".png",".jpg",".jpeg"))]
@@ -122,7 +135,9 @@ with st.sidebar:
 
 if load_btn or "model_obj" not in st.session_state:
     try:
-        st.session_state["model_obj"] = get_model(ckpt)
+        # ----------------------- CHANGE: Pass CKPT_PATH downloaded from HF -----------------------
+        st.session_state["model_obj"] = get_model(CKPT_PATH)
+        # ---------------------------------------------------------------------------
         st.success("Model loaded.")
     except Exception as e:
         st.error(f"Failed to load model: {e}")
@@ -130,6 +145,7 @@ if load_btn or "model_obj" not in st.session_state:
 
 model = st.session_state["model_obj"]
 
+# ----------------------- The rest of your code remains unchanged -----------------------
 col1, col2 = st.columns([1,1])
 
 with col1:
