@@ -17,9 +17,12 @@ from huggingface_hub import hf_hub_download
 IMG_SIZE = 384
 
 # ----------------------- CHANGE: Download checkpoint from HF -----------------------
+import os
+
 CKPT_PATH = hf_hub_download(
-    repo_id="Amitsaj/image-forgery-checkpoints",  # HF repo
-    filename="best_hybrid_stepB_v2.pth"           # filename in HF repo
+    repo_id="Amitsaj/image-forgery-checkpoints",
+    filename="best_hybrid_stepB_v2.pth",
+    token=os.environ.get("HF_TOKEN")  # <-- uses secret token
 )
 # ---------------------------------------------------------------------------
 
