@@ -7,11 +7,20 @@ import io
 import os
 import torch
 from model import HybridForgeryModel, load_checkpoint
+from huggingface_hub import hf_hub_download
 
 # -----------------------
 # CONFIG
 # -----------------------
 IMG_SIZE = 384
+
+# ----------------------- Download checkpoint from HF -----------------------
+CKPT_PATH = hf_hub_download(
+    repo_id="Amitsaj/image-forgery-checkpoints",
+    filename="best_hybrid_stepB_v2.pth",
+    token=os.environ.get("HF_TOKEN")  # <-- uses secret token if needed
+)
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 st.set_page_config(layout="wide", page_title="Forgery Inspector — Scientific Demo")
 
@@ -45,17 +54,9 @@ def overlay_image(img_rgb, heatmap, alpha=0.5):
 # LOAD MODEL (cached)
 # -----------------------
 @st.cache_resource(show_spinner=False)
-def get_model():
+def get_model(ckpt_path):
     model = HybridForgeryModel().to(DEVICE)
-    # Load checkpoint from HF
-    model = load_checkpoint(
-        model=model,
-        path=None,
-        device=DEVICE,
-        from_hf=True,
-        hf_repo="Amitsaj/image-forgery-checkpoints",
-        hf_filename="best_hybrid_stepB_v2.pth"
-    )
+    model = load_checkpoint(model, ckpt_path, DEVICE)
     model.eval()
     return model
 
@@ -116,32 +117,34 @@ st.markdown("Interactive demo for segmentation + classification. Option B: Resea
 
 with st.sidebar:
     st.header("Model & Input")
+
     load_btn = st.button("Load model")
+
+    # ----------------------- FIXED: examples path for cloud -----------------------
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    EXAMPLES_DIR = os.path.join(BASE_DIR, "examples")
+
     examples = st.selectbox(
         "Example images (optional)",
-        ["-- none --"] + [f for f in os.listdir("examples") if f.lower().endswith((".png",".jpg",".jpeg"))]
-        if os.path.exists("examples") else ["-- none --"]
+        ["-- none --"] + [
+            f for f in os.listdir(EXAMPLES_DIR)
+            if f.lower().endswith((".png", ".jpg", ".jpeg"))
+        ] if os.path.exists(EXAMPLES_DIR) else ["-- none --"]
     )
     threshold = st.slider("Segmentation threshold", 0.0, 1.0, 0.5, 0.01)
     show_gradcam = st.checkbox("Show Grad-CAM (classifier)", value=True)
-    st.markdown("**Notes:** Model trained at IMG_SIZE=384. Threshold adjusts mask sensitivity.")
+    st.markdown("**Notes:** Use the model trained at IMG_SIZE=384. Adjust threshold to tune mask sensitivity.")
 
-# ----------------------- Load model -----------------------
-if "model_obj" not in st.session_state:
-    if load_btn:
-        try:
-            st.session_state["model_obj"] = get_model()
-            st.success("Model loaded from Hugging Face ✅")
-        except Exception as e:
-            st.error(f"Failed to load model: {e}")
-            st.stop()
+if load_btn or "model_obj" not in st.session_state:
+    try:
+        st.session_state["model_obj"] = get_model(CKPT_PATH)
+        st.success("Model loaded.")
+    except Exception as e:
+        st.error(f"Failed to load model: {e}")
+        st.stop()
 
-model = st.session_state.get("model_obj", None)
-if model is None:
-    st.warning("Please load the model to proceed.")
-    st.stop()
+model = st.session_state["model_obj"]
 
-# ----------------------- Main app -----------------------
 col1, col2 = st.columns([1,1])
 
 with col1:
@@ -149,11 +152,10 @@ with col1:
     uploaded = st.file_uploader("Upload image", type=["png","jpg","jpeg"])
     if examples and examples != "-- none --":
         if st.button("Use example"):
-            uploaded = open(os.path.join("examples", examples), "rb")
-
+            uploaded = open(os.path.join(EXAMPLES_DIR, examples), "rb")
     if uploaded:
         pil_img = Image.open(uploaded).convert("RGB")
-        st.image(pil_img, caption="Uploaded image", use_container_width=True)
+        st.image(pil_img, caption="Uploaded image", width='stretch')
 
         result = predict(model, pil_img, threshold=threshold)
         orig = result["orig"]
@@ -169,9 +171,9 @@ with col1:
 
         st.subheader("Masks & Overlay")
         viz_cols = st.columns(3)
-        viz_cols[0].image(orig, caption="Original", use_container_width=True)
-        viz_cols[1].image(mask_vis, caption=f"Binary Mask (thr={threshold})", use_container_width=True)
-        viz_cols[2].image(overlay, caption="Overlay (heatmap)", use_container_width=True)
+        viz_cols[0].image(orig, caption="Original", width='stretch')
+        viz_cols[1].image(mask_vis, caption=f"Binary Mask (thr={threshold})", width='stretch')
+        viz_cols[2].image(overlay, caption="Overlay (heatmap)", width='stretch')
 
         if st.button("Download binary mask"):
             is_success, im_buf_arr = cv2.imencode(".png", mask_vis)
@@ -186,9 +188,9 @@ with col1:
                     cam_overlay = overlay_image(orig, cam_heat, alpha=0.5)
                     st.subheader("Grad-CAM (classifier)")
                     gc_cols = st.columns(3)
-                    gc_cols[0].image(cam, caption="Grad-CAM (float)", use_container_width=True)
-                    gc_cols[1].image(cam_heat, caption="Grad-CAM heatmap", use_container_width=True)
-                    gc_cols[2].image(cam_overlay, caption="Grad-CAM overlay", use_container_width=True)
+                    gc_cols[0].image(cam, caption="Grad-CAM (float)", width='stretch')
+                    gc_cols[1].image(cam_heat, caption="Grad-CAM heatmap", width='stretch')
+                    gc_cols[2].image(cam_overlay, caption="Grad-CAM overlay", width='stretch')
                 except Exception as e:
                     st.error(f"Grad-CAM failed: {e}")
     else:
@@ -198,17 +200,17 @@ with col2:
     st.subheader("Model & Training Insights")
     st.write("Model: HybridForgeryModel (UNet encoder = EfficientNet-B3)")
     st.write("Image size used for training:", IMG_SIZE)
-    if os.path.exists("training_plots/loss.png"):
-        st.image("training_plots/loss.png", caption="Loss curve", use_container_width=True)
+    if os.path.exists(os.path.join(BASE_DIR, "training_plots/loss.png")):
+        st.image(os.path.join(BASE_DIR, "training_plots/loss.png"), caption="Loss curve", width='stretch')
     else:
         st.info("Training plots not found. Save plots to `training_plots/loss.png` to display them.")
 
     st.markdown("### Sample predictions (from validation)")
-    samples_dir = "visualizations"
+    samples_dir = os.path.join(BASE_DIR, "visualizations")
     if os.path.exists(samples_dir):
         sample_files = [os.path.join(samples_dir,f) for f in os.listdir(samples_dir) if f.lower().endswith((".png",".jpg"))]
         for s in sample_files[:6]:
-            st.image(s, use_container_width=True)
+            st.image(s, width='stretch')
     else:
         st.info("Place sample prediction images in `visualizations/` to show them here.")
 
