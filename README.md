@@ -27,6 +27,22 @@ Example predictions:
 
 ---
 
+## Live Demo
+
+You can try out the Scientific Copy-Move Forgery Detection app online here:
+
+[Open Streamlit App](https://scientific-copy-move-forgery-hfc73gwmnh2pyr7jmhzu8w.streamlit.app/)
+
+**Features:**
+- Upload an image or select from example images.
+- Hybrid Segmentation + Classification using UNet (EfficientNet-B3).
+- Interactive segmentation threshold adjustment.
+- Grad-CAM explainability for classifier predictions.
+- Download the binary mask for further analysis.
+
+---
+
+
 ## 🗂 Repository Structure
 
 mageForgeryDetection/
