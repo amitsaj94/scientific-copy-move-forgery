@@ -7,9 +7,9 @@ from model import HybridForgeryModel, load_checkpoint
 IMG_SIZE = 384   # same size used in training
 
 
-# ---------------------------------------------------------
+# 
 # Preprocessing
-# ---------------------------------------------------------
+# 
 def preprocess_image(path):
     img = cv2.imread(path)
     if img is None:
@@ -24,9 +24,9 @@ def preprocess_image(path):
     return img, orig
 
 
-# ---------------------------------------------------------
+# 
 # Mask post-processing
-# ---------------------------------------------------------
+# 
 def postprocess_mask(mask, orig_shape):
     mask = torch.sigmoid(mask)[0, 0].detach().cpu().numpy()
     mask = cv2.resize(mask, (orig_shape[1], orig_shape[0]))
@@ -34,18 +34,18 @@ def postprocess_mask(mask, orig_shape):
     return mask
 
 
-# ---------------------------------------------------------
+# 
 # Overlay heatmap on original image
-# ---------------------------------------------------------
+# 
 def overlay_mask(image, mask):
     heatmap = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
     blended = cv2.addWeighted(image, 0.6, heatmap, 0.4, 0)
     return blended
 
 
-# ---------------------------------------------------------
+# 
 # Final panel: original | mask | heatmap
-# ---------------------------------------------------------
+# 
 def make_side_by_side(orig, mask, overlay, label, prob):
     mask_rgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
 
@@ -63,9 +63,9 @@ def make_side_by_side(orig, mask, overlay, label, prob):
     return panel
 
 
-# ---------------------------------------------------------
+# 
 # Main inference function
-# ---------------------------------------------------------
+# 
 def infer_and_visualize(model_path, input_img, output_img="vis_result.png", threshold=0.5):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -97,9 +97,9 @@ def infer_and_visualize(model_path, input_img, output_img="vis_result.png", thre
     print(f"Saved to     : {output_img}\n")
 
 
-# ---------------------------------------------------------
+# 
 # CLI
-# ---------------------------------------------------------
+# 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, help="Path to .pth checkpoint")
