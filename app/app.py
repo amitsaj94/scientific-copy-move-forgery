@@ -115,13 +115,13 @@ def predict(model, pil_img, threshold=0.5):
 # SAFE GRAD-CAM (no long-lived autograd graphs)
 
 
-  """
-    Compute Grad-CAM for classifier in a memory-safe way:
-      - Run encoder under no_grad to avoid storing intermediate grads for the whole graph.
-      - Clone + detach the last encoder activation and enable grad only on that tensor.
-      - Backprop from classification score to obtain grads for the cloned activation.
-      - Detach everything before converting to numpy.
     """
+        Compute Grad-CAM for classifier in a memory-safe way:
+        - Run encoder under no_grad to avoid storing intermediate grads for the whole graph.
+        - Clone + detach the last encoder activation and enable grad only on that tensor.
+        - Backprop from classification score to obtain grads for the cloned activation.
+        - Detach everything before converting to numpy.
+        """
 
 def grad_cam_classifier(model, pil_img, upsample_to=None):
   
@@ -308,4 +308,7 @@ with col2:
 st.markdown("---")
 st.markdown("Project: Scientific Copy-Move Forgery Detection — Demo (Option B)")
 st.markdown("Built for portfolio / research. Features: segmentation + classification, Grad-CAM, download mask.")
+
+
+
 
